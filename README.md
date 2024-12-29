@@ -1,10 +1,58 @@
 # Kernel Build Action For Lancelot & Merlin
 
-## Usage
+## Step-by-step guide to use
+<details>
+  <summary><i>Click to open</i></summary>
 
-> All variables in the `config.env` file are only checked for `true`.
+>### 1.
+>![01](guide/images/01.png)
 
-> Once the compilation is successful, AnyKernel3 will be uploaded in the `Action` and the device check has been disabled. Please flash it in recovery.
+>### 2.
+>![02](guide/images/02.png)
+> **Note:** Unselect `Copy the kernel-tree_lancelot branch only` if you are building for merlin.
+
+>### 3.
+>![03](guide/images/03.png)
+
+>### 4.
+>![04](guide/images/04.png)
+
+>### 5.
+>![05](guide/images/05.png)
+
+>### 6.
+>![06](guide/images/06.png)
+
+>### 7.
+>![07](guide/images/07.png)
+
+>### 8.
+>![08](guide/images/08.png)
+
+>### 9.
+>![09](guide/images/09.png)
+
+>### 10.
+>![10](guide/images/10.png)
+
+>### 11.
+>![11](guide/images/11.png)
+> **Note:** Reload this page if the yellow circle does not appear.
+
+>### 12.
+>![12](guide/images/12.png)
+
+>### 13.
+>![13](guide/images/13.png)
+
+>### 14.
+>![14](guide/images/14.png)
+  
+</details>
+<br>
+
+## Options Guide
+> All options are located in [config.env](config.env)
 
 ### KERNEL_SOURCE
 
@@ -71,21 +119,27 @@ Inject parameters into the defconfig automatically.
 
 #### KSU_HOOKS_PATCH
 
-If kprobe does not work in your kernel, then try enabling this parameter, this will automatically modify kernel source code to support KernelSU.  
+If kprobe does not work in your kernel, then try enabling this option, this will automatically modify kernel source code to support KernelSU.  
 
 See also: [Intergrate for non-GKI devices](https://kernelsu.org/guide/how-to-integrate-for-non-gki.html#manually-modify-the-kernel-source)
 
 ### ADD_OVERLAYFS_CONFIG
 
-This parameter provides support for overlayfs. Inject parameters into defconfig automatically.
+This option provides support for overlayfs. Inject parameters into defconfig automatically.
 
 ### ADD_APATCH_SUPPORT
 
-This parameter provides support for overlayfs. Inject parameters into defconfig automatically.
+This option provides support for overlayfs. Inject parameters into defconfig automatically.
 
 #### FIX_APATCH_OPENELA
 
-This parameter provides fix for https://github.com/bmax121/APatch/issues/400.
+This option provides fix for https://github.com/bmax121/APatch/issues/400.
+
+### OLD_ANDROID_SUPPORT
+
+> There is no official support for older Android and MIUI, and bug reports will not be accepted on them.
+
+This option provides support for MIUI 12.5 and custom ROMs based on Android 11 through 12, but breaks support for Android 13 and above.
 
 
 ### USE_CUSTOM_CLANG
@@ -188,6 +242,11 @@ LTO is used to optimize the kernel but sometimes causes errors.
 
 Sometimes even a harmless warning breaks the build.
 
+### FIX_MOBILE_DATA
+
+> This setting is not enabled by default due to spontaneous reboot when wifi is turned on on some devices.
+
+On some devices, the phone freezes when turning on mobile data. If you have this problem, set this option to true.
 
 ### REMOVE_UNUSED_PACKAGES
 

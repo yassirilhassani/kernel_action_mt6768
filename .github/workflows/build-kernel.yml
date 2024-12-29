@@ -31,6 +31,7 @@ jobs:
             ADD_OVERLAYFS_CONFIG
             ADD_APATCH_SUPPORT
             FIX_APATCH_OPENELA
+            OLD_ANDROID_SUPPORT
             USE_CUSTOM_CLANG
             CUSTOM_CLANG_SOURCE
             CUSTOM_CLANG_BRANCH
@@ -56,6 +57,7 @@ jobs:
             SOURCE_BOOT_IMAGE
             DISABLE_LTO
             DISABLE_CC_WERROR
+            FIX_MOBILE_DATA
             REMOVE_UNUSED_PACKAGES
             ENABLE_CCACHE
             ADD_LOCALVERSION_TO_FILENAME
@@ -210,8 +212,12 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s ${{ env.KERNELSU_TAG }}
-        KSU_VERSION=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10200)
-        echo "UPLOADNAME=-KernelSU_$KSU_VERSION" >> $GITHUB_ENV
+        if [ -d KernelSU ]; then
+            KSU_VERSION="_$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10200)"
+        else
+            KSU_VERSION=""
+        fi
+        echo "UPLOADNAME=-KernelSU$KSU_VERSION" >> $GITHUB_ENV
         if [ ${{ env.KSU_REVERT }} = true ]; then
             git apply $GITHUB_WORKSPACE/patches/KSU_REVERT.patch
         fi
@@ -267,6 +273,21 @@ jobs:
         if [ ${{ env.DISABLE_CC_WERROR }} = true ]; then
             echo "CONFIG_CC_WERROR=n" >> arch/${{ env.KERNEL_ARCH }}/configs/${{ env.KERNEL_CONFIG }}
         fi
+        if [ ${{ env.OLD_ANDROID_SUPPORT }} = true ]; then
+            git apply $GITHUB_WORKSPACE/patches/OLD_ANDROID_SUPPORT.patch
+            if grep -q "CONFIG_MMC_CRYPTO_LEGACY" arch/${{ env.KERNEL_ARCH }}/configs/${{ env.KERNEL_CONFIG }}; then
+                sed -i 's/# CONFIG_MMC_CRYPTO_LEGACY is not set/CONFIG_MMC_CRYPTO_LEGACY=y/g' arch/${{ env.KERNEL_ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+                sed -i 's/CONFIG_MMC_CRYPTO_LEGACY=n/CONFIG_MMC_CRYPTO_LEGACY=y/g' arch/${{ env.KERNEL_ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            else
+                echo "CONFIG_MMC_CRYPTO_LEGACY=y" >> arch/${{ env.KERNEL_ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            fi
+        fi
+        if [ ${{ env.FIX_MOBILE_DATA }} = true ]; then
+            rm -rf drivers/misc/mediatek/connectivity
+            cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/drivers/misc/mediatek
+            git clone https://github.com/Jbub5/connectivity.git --depth=1
+            cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        fi
 
     - name: Setup ccache
       if: env.ENABLE_CCACHE == 'true'
@@ -281,7 +302,7 @@ jobs:
         export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang/bin:$PATH
         export KBUILD_BUILD_HOST=Github-Action
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        if [ ! -z ${{ env.KSU_EXPECTED_SIZE }} ] && [ ! -z ${{ env.KSU_EXPECTED_HASH }} ]; then
+        if [ -n ${{ env.KSU_EXPECTED_SIZE }} ] && [ -n ${{ env.KSU_EXPECTED_HASH }} ]; then
           export KSU_EXPECTED_SIZE=${{ env.KSU_EXPECTED_SIZE }}
           export KSU_EXPECTED_HASH=${{ env.KSU_EXPECTED_HASH }}
         fi
