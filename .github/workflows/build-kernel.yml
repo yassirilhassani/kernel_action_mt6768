@@ -246,6 +246,11 @@ jobs:
 
     - name: Build kernel
       run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace
+        wget -nv -O clang.tar.gz ${{ env.CUSTOM_CLANG_SOURCE }}
+        mkdir clang
+        tar -C clang/ -zxvf clang.tar.gz
+
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         if [ ${{ env.USE_CUSTOM_GCC }} = true ]; then
             if [ ${{ env.USE_CUSTOM_GCC_64 }} = true ]; then
@@ -254,6 +259,7 @@ jobs:
             if [ ${{ env.USE_CUSTOM_GCC_32 }} = true ]; then
                 export PATH=$GITHUB_WORKSPACE/kernel_workspace/gcc-32/bin:$PATH
             fi
+            export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang/bin:$PATH
         else
             export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang/bin:$PATH
         fi
